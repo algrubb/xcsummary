@@ -64,7 +64,7 @@
 {
     NSUInteger successfullTests = [[summaries valueForKeyPath:@"@sum.numberOfSuccessfulTests"] integerValue];
     NSUInteger failedTests = [[summaries valueForKeyPath:@"@sum.numberOfFailedTests"] integerValue];
- 
+
     BOOL failuresPresent = failedTests > 0;
     NSString *templateFormat = [self _decodeTemplateWithName:SummaryTemplate];
     NSTimeInterval totalTime = [[summaries valueForKeyPath:@"@sum.totalDuration"] doubleValue];
@@ -76,7 +76,7 @@
 - (void)appendTests:(NSArray *)tests indentation:(CGFloat)indentation
 {
     [tests enumerateObjectsUsingBlock:^(CMTest * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-        
+
         [self _appendTestCase:obj indentation:indentation];
         if (obj.subTests.count > 0)
         {
@@ -88,16 +88,25 @@
             {
                 if (obj.status == CMTestStatusFailure)
                 {
-                    [self _appendActivities:obj.activities indentation:indentation + 50];
+                    [self appendTest:obj indentation:indentation];
                 }
             }
             else
             {
-                [self _appendActivities:obj.activities indentation:indentation + 50];
+                [self appendTest:obj indentation:indentation];
             }
+
         }
     }];
 }
+
+- (void)appendTest:(CMTest *)test indentation:(CGFloat)indentation
+{
+    [self _appendBeginingForTest:test];
+    [self _appendActivities:test.activities indentation:indentation + 50];
+    [self _appendEndForTest:test];
+}
+
 - (NSString *)build
 {
     NSString *templateFormat = [self _decodeTemplateWithName:Template];
@@ -118,7 +127,7 @@
     NSString *templateFormat = testCase.status == CMTestStatusFailure ?
     [self _decodeTemplateWithName:TestCaseTemplateFailed] :
     [self _decodeTemplateWithName:TestCaseTemplate];
-    NSString *composedString = [NSString stringWithFormat:templateFormat, indentation, @"px", testCase.testName, testCase.duration];
+    NSString *composedString = [NSString stringWithFormat:templateFormat, indentation, @"px", testCase.testName, testCase.testName, testCase.duration];
     [self.resultString appendString:composedString];
 }
 
@@ -137,12 +146,12 @@
     if (activity.hasScreenshotData)
     {
         templateFormat = [self _decodeTemplateWithName:ActivityTemplateWithImage];
-        NSString *imageName = [NSString stringWithFormat:@"Screenshot_%@.png", activity.uuid.UUIDString];
+        NSString *imageName = [NSString stringWithFormat:@"Screenshot_%@.jpg", activity.uuid.UUIDString];
         NSString *fullPath = [self.path stringByAppendingPathComponent:imageName];
-        
+
         [self.fileManager copyItemAtPath:fullPath toPath:[self.htmlResourcePath stringByAppendingPathComponent:imageName] error:nil];
-        
-        NSString *localImageName = [NSString stringWithFormat:@"resources/Screenshot_%@.png", activity.uuid.UUIDString];
+
+        NSString *localImageName = [NSString stringWithFormat:@"Attachments/Screenshot_%@.jpg", activity.uuid.UUIDString];
         composedString = [NSString stringWithFormat:templateFormat, indentation, @"px", activity.title, activity.finishTimeInterval - activity.startTimeInterval, localImageName];
     }
     else
@@ -150,8 +159,19 @@
         templateFormat = [self _decodeTemplateWithName:ActivityTemplateWithoutImage];
         composedString = [NSString stringWithFormat:templateFormat, indentation, @"px", activity.title, activity.finishTimeInterval - activity.startTimeInterval];
     }
-    
+
     [self.resultString appendString:composedString];
+}
+
+- (void)_appendBeginingForTest:(CMTest *)test
+{
+    NSString *testBegining = [NSString stringWithFormat:@"<div id=\"%@\" style=\"display: none\" margin-left: 10.00px; background-color: #CBF4A3; padding:10px; text-align: right;", test.testName];
+    [self.resultString appendString:testBegining];
+}
+
+- (void)_appendEndForTest:(CMTest *)test
+{
+    [self.resultString appendString:@"</div>"];
 }
 
 #pragma mark - File Operations
