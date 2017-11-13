@@ -38,7 +38,7 @@
         _fileManager = [NSFileManager defaultManager];
         _path = path;
         _resultsPath = resultsPath;
-        _htmlResourcePath = [[resultsPath stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"resources"];
+        _htmlResourcePath = [[resultsPath stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"Attachments"];
         _resultString = [NSMutableString new];
         _showSuccessTests = showSuccessTests;
         [self _prepareResourceFolder];
